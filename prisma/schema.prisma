@@ -1,0 +1,303 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// USER & AUTH
+// ==========================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+}
+
+// ==========================================
+// NEWS (YANGILIKLAR)
+// ==========================================
+
+model News {
+  id          String   @id @default(cuid())
+  title_uz    String
+  title_ru    String
+  title_en    String
+  content_uz  String   @db.Text
+  content_ru  String   @db.Text
+  content_en  String   @db.Text
+  excerpt_uz  String?  @db.Text
+  excerpt_ru  String?  @db.Text
+  excerpt_en  String?  @db.Text
+  slug        String   @unique
+  category    String   // 'event', 'achievement', 'announcement', 'general'
+  image       String?
+  views       Int      @default(0)
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published, publishedAt])
+  @@index([category])
+  @@map("news")
+}
+
+// ==========================================
+// TEACHERS (O'QITUVCHILAR)
+// ==========================================
+
+model Teacher {
+  id             String   @id @default(cuid())
+  name_uz        String
+  name_ru        String
+  name_en        String
+  position_uz    String
+  position_ru    String
+  position_en    String
+  bio_uz         String?  @db.Text
+  bio_ru         String?  @db.Text
+  bio_en         String?  @db.Text
+  subject        String   // 'math', 'physics', 'english', etc.
+  photo          String?
+  email          String?
+  phone          String?
+  certifications Json?    // Array of certifications
+  socialLinks    Json?    // {facebook, instagram, telegram}
+  experience     Int?     // years
+  education      Json?    // Array of education
+  order          Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([subject])
+  @@index([isActive])
+  @@map("teachers")
+}
+
+// ==========================================
+// GALLERY (GALEREYA)
+// ==========================================
+
+model Gallery {
+  id          String      @id @default(cuid())
+  type        MediaType   // 'photo', 'video', 'virtual_tour'
+  title_uz    String
+  title_ru    String
+  title_en    String
+  description_uz String?  @db.Text
+  description_ru String?  @db.Text
+  description_en String?  @db.Text
+  url         String      // file path or YouTube URL
+  thumbnail   String?     // for videos
+  category    String      // 'events', 'sports', 'arts', 'classes', etc.
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@map("gallery")
+}
+
+enum MediaType {
+  PHOTO
+  VIDEO
+  VIRTUAL_TOUR
+}
+
+// ==========================================
+// ACHIEVEMENTS (YUTUQLAR)
+// ==========================================
+
+model Achievement {
+  id             String   @id @default(cuid())
+  title_uz       String
+  title_ru       String
+  title_en       String
+  description_uz String   @db.Text
+  description_ru String   @db.Text
+  description_en String   @db.Text
+  category       String   // 'olympiad', 'sports', 'arts', 'science'
+  year           Int
+  image          String?
+  studentName    String?
+  studentClass   String?
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([year])
+  @@index([category])
+  @@map("achievements")
+}
+
+// ==========================================
+// STUDENT WORKS (O'QUVCHILAR ISHLARI)
+// ==========================================
+
+model StudentWork {
+  id          String   @id @default(cuid())
+  title_uz    String
+  title_ru    String
+  title_en    String
+  description_uz String? @db.Text
+  description_ru String? @db.Text
+  description_en String? @db.Text
+  category    String   // 'art', 'coding', 'science', 'literature'
+  studentName String
+  studentClass String
+  media       String   // image or video URL
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@map("student_works")
+}
+
+// ==========================================
+// ADMISSIONS (QABUL/ARIZALAR)
+// ==========================================
+
+model Application {
+  id                 String            @id @default(cuid())
+  parentName         String
+  parentPhone        String
+  parentEmail        String
+  studentName        String
+  studentBirthDate   DateTime
+  studentGrade       String
+  documents          Json?             // Array of file URLs
+  additionalInfo     String?           @db.Text
+  status             ApplicationStatus @default(PENDING)
+  adminNotes         String?           @db.Text
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONTACTED
+}
+
+// ==========================================
+// EVENTS (TADBIRLAR)
+// ==========================================
+
+model Event {
+  id             String    @id @default(cuid())
+  title_uz       String
+  title_ru       String
+  title_en       String
+  description_uz String?   @db.Text
+  description_ru String?   @db.Text
+  description_en String?   @db.Text
+  category       String    // 'exam', 'holiday', 'meeting', 'sports', etc.
+  startDate      DateTime
+  endDate        DateTime?
+  location       String?
+  isPublic       Boolean   @default(true)
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([startDate])
+  @@index([category])
+  @@map("events")
+}
+
+// ==========================================
+// PROGRAMS (TA'LIM YO'NALISHLARI)
+// ==========================================
+
+model Program {
+  id             String   @id @default(cuid())
+  level          String   // 'elementary', 'middle', 'high'
+  title_uz       String
+  title_ru       String
+  title_en       String
+  description_uz String   @db.Text
+  description_ru String   @db.Text
+  description_en String   @db.Text
+  subjects       Json     // Array of subjects
+  schedule       String?  // PDF URL
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([level])
+  @@map("programs")
+}
+
+// ==========================================
+// SETTINGS (SOZLAMALAR)
+// ==========================================
+
+model Setting {
+  id              Int      @id @default(1)
+  schoolName_uz   String?
+  schoolName_ru   String?
+  schoolName_en   String?
+  
+  // Bog'lanish
+  phone           String?
+  email           String?
+  address_uz      String?
+  address_ru      String?
+  address_en      String?
+  googleMapsUrl   String? @db.Text
+
+  // Ijtimoiy tarmoqlar
+  telegram        String?
+  instagram       String?
+  facebook        String?
+  youtube         String?
+
+  // Maktab statistikasi (TZ 2.2-bandi uchun)
+  studentsCount   Int      @default(0)
+  teachersCount   Int      @default(0)
+  graduatesCount  Int      @default(0)
+  establishedYear Int      @default(2024)
+
+  logo            String?
+  footerText_uz   String?
+  footerText_ru   String?
+  footerText_en   String?
+
+  updatedAt       DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// Key examples:
+// - site_info: {name_uz, name_ru, name_en, logo, banner}
+// - contact_info: {address, phone, email, workHours}
+// - social_media: {telegram, instagram, facebook, youtube}
+// - seo: {metaTitle, metaDescription, keywords}

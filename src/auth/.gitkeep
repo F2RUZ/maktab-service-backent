@@ -1,0 +1,10 @@
+# Auth Module
+
+Bu yerda authentication va authorization funksiyalari bo'ladi.
+
+## Keyingi bosqichda qo'shiladi:
+- Login
+- Register
+- JWT Token
+- Guards
+- Decorators
